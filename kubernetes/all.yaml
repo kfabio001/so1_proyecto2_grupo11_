@@ -1,0 +1,225 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: project
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: dummy
+  name: dummy
+  namespace: project
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dummy
+  template:
+    metadata:
+      labels:
+        app: dummy
+    spec:
+      containers:
+      - image: fabiosanchez/pub2
+        imagePullPolicy: Always
+        name: dummy
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: dummy
+  name: dummy
+  namespace: project
+spec:
+  ports:
+  - port: 3050
+    protocol: TCP
+    targetPort: 3050
+  selector:
+    app: dummy
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dummy-ingress
+  namespace: project
+  annotations:
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      proxy_set_header l5d-dst-override $service_name.$namespace.svc.cluster.local:$service_port;
+      grpc_set_header l5d-dst-override $service_name.$namespace.svc.cluster.local:$service_port;
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: load.grupo11-so1.tk
+      http:
+        paths:
+          - backend:
+              service:
+                name: dummy
+                port: 
+                  number: 3050
+            path: /
+            pathType: Prefix
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: clientegrpc
+  name: clientegrpc
+  namespace: project
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: clientegrpc
+  template:
+    metadata:
+      labels:
+        app: clientegrpc
+    spec:
+      containers:
+      - image: fabiosanchez/client5
+        imagePullPolicy: Always
+        name: clientegrpc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: clientegrpc
+  name: clientegrpc
+  namespace: project
+spec:
+  ports:
+  - port: 3050
+    protocol: TCP
+    targetPort: 3050
+  selector:
+    app: clientegrpc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: servidorgrcp
+  name: servidorgrcp
+  namespace: project
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: servidorgrcp
+  template:
+    metadata:
+      labels:
+        app: servidorgrcp
+    spec:
+      containers:
+      - image: fabiosanchez/server2
+        imagePullPolicy: Always
+        name: servidorgrcp
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: servidorgrcp
+  name: servidorgrcp
+  namespace: project
+spec:
+  ports:
+  - port: 50051
+    protocol: TCP
+    targetPort: 50051
+  selector:
+    app: servidorgrcp
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: redispub
+  name: redispub
+  namespace: project
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redispub
+  template:
+    metadata:
+      labels:
+        app: redispub
+    spec:
+      containers:
+      - image: fabiosanchez/pub2
+        imagePullPolicy: Always
+        name: redispub
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: redispub
+  name: redispub
+  namespace: project
+spec:
+  ports:
+  - port: 3050
+    protocol: TCP
+    targetPort: 3050
+  selector:
+    app: redispub
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: redissub
+  name: redissub
+  namespace: project
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redissub
+  template:
+    metadata:
+      labels:
+        app: redissub
+    spec:
+      containers:
+      - image: fabiosanchez/sub2
+        imagePullPolicy: Always
+        name: redissub
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: redissub
+  name: redissub
+  namespace: project
+spec:
+  ports:
+  - port: 3050
+    protocol: TCP
+    targetPort: 3050
+  selector:
+    app: redissub
+---
+apiVersion: split.smi-spec.io/v1alpha2
+kind: TrafficSplit
+metadata:
+  name: function-split
+  namespace: project
+spec:
+  service: dummy
+  backends:
+  - service: clientegrpc
+    weight: 50
+  - service: redispub
+    weight: 50

@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: clientegrpc
+  name: clientegrpc
+  namespace: project
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: clientegrpc
+  template:
+    metadata:
+      labels:
+        app: clientegrpc
+    spec:
+      containers:
+      - image: fabiosanchez/client3
+        imagePullPolicy: Always
+        name: clientegrpc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: clientegrpc
+  name: clientegrpc
+  namespace: project
+spec:
+  ports:
+  - port: 3050
+    protocol: TCP
+    targetPort: 3050
+  selector:
+    app: clientegrpc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: servidorgrcp
+  name: servidorgrcp
+  namespace: project
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: servidorgrcp
+  template:
+    metadata:
+      labels:
+        app: servidorgrcp
+    spec:
+      containers:
+      - image: fabiosanchez/server2
+        imagePullPolicy: Always
+        name: servidorgrcp
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: servidorgrcp
+  name: servidorgrcp
+  namespace: project
+spec:
+  ports:
+  - port: 50051
+    protocol: TCP
+    targetPort: 50051
+  selector:
+    app: servidorgrcp

@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: dummy
+  name: dummy
+  namespace: project
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dummy
+  template:
+    metadata:
+      labels:
+        app: dummy
+    spec:
+      containers:
+      - image: fabiosanchez/pub2
+        imagePullPolicy: Always
+        name: dummy
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: dummy
+  name: dummy
+  namespace: project
+spec:
+  ports:
+  - port: 3050
+    protocol: TCP
+    targetPort: 3050
+  selector:
+    app: dummy
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dummy-ingress
+  namespace: project
+  annotations:
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      proxy_set_header l5d-dst-override $service_name.$namespace.svc.cluster.local:$service_port;
+      grpc_set_header l5d-dst-override $service_name.$namespace.svc.cluster.local:$service_port;
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: load.grupo11-so1.tk
+      http:
+        paths:
+          - backend:
+              service:
+                name: dummy
+                port: 
+                  number: 3050
+            path: /
+            pathType: Prefix

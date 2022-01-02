@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: redispub
+  name: redispub
+  namespace: project
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redispub
+  template:
+    metadata:
+      labels:
+        app: redispub
+    spec:
+      containers:
+      - image: fabiosanchez/pub2
+        imagePullPolicy: Always
+        name: redispub
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: redispub
+  name: redispub
+  namespace: project
+spec:
+  ports:
+  - port: 3050
+    protocol: TCP
+    targetPort: 3050
+  selector:
+    app: redispub
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: redissub
+  name: redissub
+  namespace: project
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redissub
+  template:
+    metadata:
+      labels:
+        app: redissub
+    spec:
+      containers:
+      - image: fabiosanchez/sub2
+        imagePullPolicy: Always
+        name: redissub
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: redissub
+  name: redissub
+  namespace: project
+spec:
+  ports:
+  - port: 3050
+    protocol: TCP
+    targetPort: 3050
+  selector:
+    app: redissub
