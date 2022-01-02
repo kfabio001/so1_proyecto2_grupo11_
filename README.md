@@ -1,1 +1,1 @@
-# so1_proyecto2_grupo11_
+# so1_proyecto2_grupo11
